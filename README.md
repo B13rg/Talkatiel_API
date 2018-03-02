@@ -22,7 +22,7 @@ To exit the virtual environment when we are done we type:
 
 Your terminal should now look like:
 
-```(env) $ ```
+```(env) $ # command go here```
 
 Next we want to install all the dependencies.  We do this by using pip
 
