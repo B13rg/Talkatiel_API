@@ -6,12 +6,14 @@ API for Talkatiel Project
 First be sure to have python and pip installed
 
 If you don't have virtual envirnment installed either, run:
-```$ pip install --user pipenv
+```
+$ pip install --user pipenv
 ```
 
 Then setup a virtual environment for the project and activate it.
 
-```$ virtualenv env
+```
+$ virtualenv env
 $ source activate
 ```
 To exit the virtual environment when we are done we type:
