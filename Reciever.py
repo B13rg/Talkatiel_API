@@ -7,6 +7,7 @@ from flask.ext.jsonpify import jsonify
 db = create_engine('sqlite:///chinook.db')
 app = Flask(__name__)
 api = API(app)
+app_port='5002'
 
 class Posts(Resource):
 	"""Get the top 50 posts.  If a number is passed in, it will get 50 posts from that index onward."""
@@ -56,4 +57,4 @@ api.add_resource(Users, '/Users/<user_id>')
 
 
 if __name__ == '__main__':
-	app.run(port='5002')
+	app.run(port=app_port)
