@@ -6,7 +6,7 @@ from json import dumps
 from flask_jsonpify import jsonify
 import time
 
-db = create_engine('sqlite:///database.db')
+db = create_engine('sqlite:///Talkatiel_API/database.db')
 app = Flask(__name__)
 cache = Cache(app,config={'CACHE_TYPE': 'simple'})
 api = Api(app)
@@ -32,7 +32,12 @@ def get_posts(req_type, post_index):
 
 @app.route('/Posts/<string:req_type>', methods=['GET'])
 def simple_get(req_type):
-	get_posts(req_type, None)
+	if(req_type=="Hot"):
+		return get_hot(0)
+	elif(req_type=="New"):
+		return get_new(0)
+	elif(req_type=="Top"):
+		return get_top(0)
 
 """Hot posts are caches for 2 minutes"""
 @cache.cached(timeout=120, key_prefix='hot_posts')	#caches for 120 seconds, or 2 minutes.
@@ -41,16 +46,14 @@ def get_hot(post_index):
 	query = conn.execute("""SELECT postID, title, content, upvotes, downvotes FROM posts 
 								ORDER BY LOG10(ABS(upvotes-downvotes) + 1) * SIGN(upvotes - downvotes)
 								+ (DATETIME(postDate) / 300000) DESC LIMIT {0},50""".format(post_index))
-	result = {'data': [dict(zip(tuple (query.keys()), i)) for i in query.cursor]}	
-	return jsonify(result)
+	return dumps([dict(r) for r in query])
 
 #don't cache new because we always want the newest of the new.
 def get_new(post_index):
 	conn = db.connect()
 	query = conn.execute("""SELECT postID, title, content, upvotes, downvotes FROM posts 
 								ORDER BY DATETIME(postDate) DESC LIMIT {0},50""".format(post_index))
-	result = {'data': [dict(zip(tuple (query.keys()), i)) for i in query.cursor]}	
-	return jsonify(result)
+	return dumps([dict(r) for r in query])
 
 """Top posts are caches for 2 minutes"""
 @cache.cached(timeout=120, key_prefix='top_posts')
@@ -59,8 +62,7 @@ def get_top(post_index):
 	query = conn.execute("SELECT postID, title, content, upvotes, downvotes FROM posts "
 								"WHERE DATETIME(postDate) >= (CURDATE() - INTERVAL 3 DAY) "
 								"ORDER BY (upvotes-downvotes) DESC LIMIT {0},50".format(post_index))
-	result = {'data': [dict(zip(tuple (query.keys()), i)) for i in query.cursor]}	
-	return jsonify(result)
+	return json.dumps([dict(r) for r in query])
 
 """TODO Currently only does top level comments"""
 @app.route('/Posts/<int:postID>', methods=['GET'])
@@ -69,8 +71,7 @@ def get_comments(postID):
 	query = conn.execute("SELECT postID, title, content, upvotes, downvotes FROM posts "
 								"WHERE parentPost = {0} "
 								"ORDER BY (upvotes-downvotes) DESC".format(postID))
-	result = {'data': [dict(zip(tuple (query.keys()), i)) for i in query.cursor]}	
-	return jsonify(result)
+	return dumps([dict(r) for r in query])
 
 """Votes on a post given the postiID and voteType"""
 @app.route('/Posts/<int:postID>/<int:vote_Type>', methods=['POST'])
@@ -128,8 +129,7 @@ def comment(postID):
 def get_User(userID):
 	conn = db.connect()
 	query = conn.execute("SELECT * FROM users WHERE user_id=%d " %float(userID))
-	result = {'data': [dict(zip(tuple (query.keys()) , i)) for i in query.cursor]}
-	return jsonify(result)
+	return dumps([dict(r) for r in query])
 
 @app.route('/Users/', methods=['POST'])
 def post_user(self):
@@ -142,7 +142,6 @@ def post_user(self):
 	try:
 		query = conn.execute("INSERT INTO users (ID, phonenumber, deviceID, points, active, admin) "
 									"VALUES({0},{1},{2},0,TRUE,{3})".format(userID,phone,deviceID,admin))
-		conn.commit()
 		return {'status':'success'}
 	except MYSQLdb.IntegrityError:
 		return {'status':'failure'}
