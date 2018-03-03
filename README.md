@@ -26,11 +26,14 @@ Your terminal should now look like:
 
 Next we want to install all the dependencies.  We do this by using pip
 
-```(env)$ pip install -r requirements.txt```
+```(env) $ pip install -r requirements.txt```
 
 This will install the python libraries in the virtual environment.  This means that anytime you install python packages, they will be installed in the virtual environment instead of your system.  This will stop packages from conflicting with each other and stop the packages that you already have installed from updating or changing.
 
 To run the REST API, just run Reciever.py.  It will connect to the database defined and serve requests on the port defined.  The script will look for a sqlite database titled chinook.db, and will serve requests on port 5002.
+
+To run it, simply type this into a terminal:
+```(env) $ python Reciever.py```
 
 ## How to make requests
 
