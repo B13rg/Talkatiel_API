@@ -4,11 +4,13 @@ from flask_cache import Cache
 from sqlalchemy import create_engine
 from json import dumps
 from flask_jsonpify import jsonify
+from flask_cors import CORS, cross_origin
 import time
 
 db = create_engine('sqlite:///Talkatiel_API/database.db')
 app = Flask(__name__)
 cache = Cache(app,config={'CACHE_TYPE': 'simple'})
+CORS(app)
 api = Api(app)
 app_port='5002'
 
