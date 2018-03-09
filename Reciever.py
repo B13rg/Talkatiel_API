@@ -104,7 +104,7 @@ def delete_post(postID):
 
 """ Add a post to the database """
 @app.route('/Posts', methods=['POST'])
-def post(self):
+def post():
 	conn = db.connect()
 	print(request.json)
 	title = request.json['title']
@@ -133,8 +133,8 @@ def get_User(userID):
 	query = conn.execute("SELECT * FROM users WHERE user_id=%d " %float(userID))
 	return dumps([dict(r) for r in query])
 
-@app.route('/Users/', methods=['POST'])
-def post_user(self):
+@app.route('/Users', methods=['POST'])
+def post_user():
 	conn = db.connect()
 	print(request.json)
 	userID = request.json['userID']
