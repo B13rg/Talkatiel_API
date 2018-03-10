@@ -64,7 +64,7 @@ def get_top(post_index):
 	query = conn.execute("SELECT postID, title, content, upvotes, downvotes FROM posts "
 								"WHERE DATETIME(postDate) >= (CURDATE() - INTERVAL 3 DAY) "
 								"ORDER BY (upvotes-downvotes) DESC LIMIT {0},50".format(post_index))
-	return json.dumps([dict(r) for r in query])
+	return dumps([dict(r) for r in query])
 
 """TODO Currently only does top level comments"""
 @app.route('/Posts/<int:postID>', methods=['GET'])
@@ -89,9 +89,9 @@ def vote_post(postID, vote_Type):
 @app.route('/Posts/Report/<int:postID>', methods=['POST'])
 def report_post(postID):
 	conn = db.connect()
-	print(request.json)
-	userID = request.json['userID']
-	reason = request.json['reason']
+	data=request.get_json(force=True)
+	userID = data['userID']
+	reason = data['reason']
 	conn.execute("INSERT INTO reports (reportID, postID, userID, reason) VALUES(null,{0},{1},'{2}')".format(postID, userID, reason))
 	return {'status':'success'}
 
@@ -106,10 +106,10 @@ def delete_post(postID):
 @app.route('/Posts', methods=['POST'])
 def post():
 	conn = db.connect()
-	print(request.json)
-	title = request.json['title']
-	content = request.json['content']
-	userID = request.json['userID']
+	data=request.get_json(force=True)
+	title = data['title']
+	content = data['content']
+	userID = data['userID']
 	query = conn.execute("INSERT INTO posts (postID, title, content, postDate, upvotes, downvotes, visible, parentPost, userID) "
 								"VALUES(null,{0},{1},NOW(),0,0,TRUE,null,{2})".format(title,content,userID))
 	return {'status':'success'}
@@ -118,10 +118,11 @@ def post():
 @app.route('/Posts/<int:postID>', methods=['POST'])
 def comment(postID):
 	conn = db.connect()
-	print(request.json)
 	#no title for comments
-	content = request.json['content']
-	userID = request.json['userID']
+	data=request.get_json(force=True)
+	content = data['content']
+	postID = data['postID']
+	userID = data['userID']
 	query = conn.execute("INSERT INTO posts (postID, title, content, upvotes, downvotes, visible, parentPost, userID) "
 								"VALUES(null,'',{0},0,0,TRUE,{1},{2})".format(content,postID,userID))
 	return {'status':'success'}
@@ -136,16 +137,16 @@ def get_User(userID):
 @app.route('/Users', methods=['POST'])
 def post_user():
 	conn = db.connect()
-	print(request.json)
-	userID = request.json['userID']
-	phone = request.json['phone']
-	deviceID = request.json['deviceID']
-	admin = request.json['admin']
+	data=request.get_json(force=True)
+	userID = data['userID']
+	phone = data['phone']
+	deviceID = data['deviceID']
+	admin = data['admin']
 	try:
 		query = conn.execute("INSERT INTO users (ID, phonenumber, deviceID, points, active, admin) "
 									"VALUES({0},{1},{2},0,TRUE,{3})".format(userID,phone,deviceID,admin))
 		return {'status':'success'}
-	except MYSQLdb.IntegrityError:
+	except:
 		return {'status':'failure'}
 
 
