@@ -5,9 +5,8 @@ from sqlalchemy import create_engine
 from json import dumps
 from flask_jsonpify import jsonify
 from flask_cors import CORS, cross_origin
-import time
 
-db = create_engine('sqlite:///Talkatiel_API/database.db')
+db = create_engine('sqlite:///database.db')
 app = Flask(__name__)
 cache = Cache(app,config={'CACHE_TYPE': 'simple'})
 CORS(app)
@@ -45,15 +44,15 @@ def simple_get(req_type):
 @cache.cached(timeout=120, key_prefix='hot_posts')	#caches for 120 seconds, or 2 minutes.
 def get_hot(post_index):
 	conn = db.connect()
-	query = conn.execute("""SELECT postID, title, content, upvotes, downvotes FROM posts 
-								ORDER BY LOG10(ABS(upvotes-downvotes) + 1) * SIGN(upvotes - downvotes)
+	query = conn.execute("""SELECT postID, title, content, upvotes, downvotes FROM posts
+								ORDER BY ((ABS(upvotes-downvotes) + 1)%10) * (upvotes - downvotes)
 								+ (DATETIME(postDate) / 300000) DESC LIMIT {0},50""".format(post_index))
 	return dumps([dict(r) for r in query])
 
 #don't cache new because we always want the newest of the new.
 def get_new(post_index):
 	conn = db.connect()
-	query = conn.execute("""SELECT postID, title, content, upvotes, downvotes FROM posts 
+	query = conn.execute("""SELECT postID, title, content, upvotes, downvotes FROM posts
 								ORDER BY DATETIME(postDate) DESC LIMIT {0},50""".format(post_index))
 	return dumps([dict(r) for r in query])
 
@@ -62,7 +61,7 @@ def get_new(post_index):
 def get_top(post_index):
 	conn = db.connect()
 	query = conn.execute("SELECT postID, title, content, upvotes, downvotes FROM posts "
-								"WHERE DATETIME(postDate) >= (CURDATE() - INTERVAL 3 DAY) "
+								"WHERE postDate BETWEEN datetime('now', '-3 days') AND datetime('now', 'localtime') "
 								"ORDER BY (upvotes-downvotes) DESC LIMIT {0},50".format(post_index))
 	return dumps([dict(r) for r in query])
 
@@ -83,7 +82,7 @@ def vote_post(postID, vote_Type):
 		conn.execute("UPDATE posts SET upvotes = upvotes+1 WHERE postID="+ str(postID))
 	else:
 		conn.execute("UPDATE posts SET downvotes = downvotes+1 WHERE postID="+ str(postID))
-	return {'status':'success'}
+	return jsonify({'status':'success'})
 
 """Adds the given postID to the reports table"""
 @app.route('/Posts/Report/<int:postID>', methods=['POST'])
@@ -93,14 +92,14 @@ def report_post(postID):
 	userID = data['userID']
 	reason = data['reason']
 	conn.execute("INSERT INTO reports (reportID, postID, userID, reason) VALUES(null,{0},{1},'{2}')".format(postID, userID, reason))
-	return {'status':'success'}
+	return jsonify({'status':'success'})
 
 """Deletes a post with the give postID"""
 @app.route('/Posts/Delete/<int:postID>', methods=["GET"])
 def delete_post(postID):
 	conn = db.connect()
 	conn.execute("DELETE FROM posts WHERE postID={0}".format(postID))
-	return {'status':'success'}
+	return jsonify({'status':'success'})
 
 """ Add a post to the database """
 @app.route('/Posts', methods=['POST'])
@@ -111,8 +110,8 @@ def post():
 	content = data['content']
 	userID = data['userID']
 	query = conn.execute("INSERT INTO posts (postID, title, content, postDate, upvotes, downvotes, visible, parentPost, userID) "
-								"VALUES(null,{0},{1},NOW(),0,0,TRUE,null,{2})".format(title,content,userID))
-	return {'status':'success'}
+								"VALUES(null,{0},{1},NOW(),0,0,1,null,{2})".format(title,content,userID))
+	return jsonify({'status':'success'})
 
 """Adds a comment to the given post"""
 @app.route('/Posts/<int:postID>', methods=['POST'])
@@ -124,8 +123,8 @@ def comment(postID):
 	postID = data['postID']
 	userID = data['userID']
 	query = conn.execute("INSERT INTO posts (postID, title, content, upvotes, downvotes, visible, parentPost, userID) "
-								"VALUES(null,'',{0},0,0,TRUE,{1},{2})".format(content,postID,userID))
-	return {'status':'success'}
+								"VALUES(null,'',{0},0,0,1,{1},{2})".format(content,postID,userID))
+	return jsonify({'status':'success'})
 
 
 @app.route('/Users/<int:userID>', methods=['GET'])
@@ -141,13 +140,10 @@ def post_user():
 	userID = data['userID']
 	phone = data['phone']
 	deviceID = data['deviceID']
-	admin = data['admin']
-	try:
-		query = conn.execute("INSERT INTO users (ID, phonenumber, deviceID, points, active, admin) "
-									"VALUES({0},{1},{2},0,TRUE,{3})".format(userID,phone,deviceID,admin))
-		return {'status':'success'}
-	except:
-		return {'status':'failure'}
+	admin = int(data['admin'])
+	query = conn.execute("INSERT INTO users (ID, phonenumber, deviceID, points, active, admin) "
+								"VALUES({0},{1},{2},0,1,{3})".format(userID,phone,deviceID,admin))
+	return jsonify({'status':'success'})
 
 
 if __name__ == '__main__':
