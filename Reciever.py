@@ -91,7 +91,7 @@ def report_post(postID):
 	data=request.get_json(force=True)
 	userID = data['userID']
 	reason = data['reason']
-	conn.execute("INSERT INTO reports (reportID, postID, userID, reason) VALUES(null,{0},{1},'{2}')".format(postID, userID, reason))
+	conn.execute("INSERT INTO reports (reportID, postID, userID, reason) VALUES(NULL,{0},{1},'{2}')".format(postID, userID, reason))
 	return jsonify({'status':'success'})
 
 """Deletes a post with the give postID"""
@@ -109,8 +109,8 @@ def post():
 	title = data['title']
 	content = data['content']
 	userID = data['userID']
-	query = conn.execute("INSERT INTO posts (postID, title, content, postDate, upvotes, downvotes, visible, parentPost, userID) "
-								"VALUES(null,{0},{1},NOW(),0,0,1,null,{2})".format(title,content,userID))
+	query = conn.execute("INSERT INTO posts (postID, title, content, upvotes, downvotes, visible, parentPost, userID) "
+								"VALUES(NULL,'{0}','{1}',0,0,1,NULL,{2})".format(title,content,userID))
 	return jsonify({'status':'success'})
 
 """Adds a comment to the given post"""
@@ -123,7 +123,7 @@ def comment(postID):
 	postID = data['postID']
 	userID = data['userID']
 	query = conn.execute("INSERT INTO posts (postID, title, content, upvotes, downvotes, visible, parentPost, userID) "
-								"VALUES(null,'',{0},0,0,1,{1},{2})".format(content,postID,userID))
+								"VALUES(NULL,'','{0}',0,0,1,{1},{2})".format(content,postID,userID))
 	return jsonify({'status':'success'})
 
 
@@ -142,7 +142,7 @@ def post_user():
 	deviceID = data['deviceID']
 	admin = int(data['admin'])
 	query = conn.execute("INSERT INTO users (ID, phonenumber, deviceID, points, active, admin) "
-								"VALUES({0},{1},{2},0,1,{3})".format(userID,phone,deviceID,admin))
+								"VALUES({0},'{1}',{2},0,1,{3})".format(userID,phone,deviceID,admin))
 	return jsonify({'status':'success'})
 
 
