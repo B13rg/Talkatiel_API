@@ -78,7 +78,7 @@ def test_postPost():
 		contents = requests.post("http://"+hostname+":"+str(port)+"/Posts", 
 			data={"title": "343434","content": "sdfsdfsdfsdf", "userID": 9 } )
 		statusCode=contents.status_code/100
-		if(statusCode==2):
+		if(statusCode==4):
 			return "PASSED"
 	except:
 		return "FAILED"
@@ -89,7 +89,7 @@ def test_postUser():
 		contents = requests.post("http://"+hostname+":"+str(port)+"/Users", 
 			data={"userID": 343434,"phone": "5419796673", "deviceID": "qwasd asdasdasdasc 34523", "admin": 0 } )
 		statusCode=contents.status_code/100
-		if(statusCode==2):
+		if(statusCode==4):
 			return "PASSED"
 	except:
 		return "FAILED"
