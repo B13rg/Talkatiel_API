@@ -13,12 +13,6 @@ CORS(app)
 api = Api(app)
 app_port='5002'
 
-"""
-TODO Some sort of authentication
-TODO Return tree of comments json
-"""
-
-
 """Get the top 50 posts.  If a number is passed in, it will get 50 posts from that index onward."""
 @app.route('/Posts/<string:req_type>/<int:post_index>', methods=['GET'])
 def get_posts(req_type, post_index):
@@ -65,13 +59,18 @@ def get_top(post_index):
 								"ORDER BY (upvotes-downvotes) DESC LIMIT {0},50".format(post_index))
 	return dumps([dict(r) for r in query])
 
-"""TODO Currently only does top level comments"""
 @app.route('/Posts/<int:postID>', methods=['GET'])
 def get_comments(postID):
 	conn = db.connect()
-	query = conn.execute("SELECT postID, title, content, upvotes, downvotes FROM posts "
-								"WHERE parentPost = {0} "
-								"ORDER BY (upvotes-downvotes) DESC".format(postID))
+	query = conn.execute("WITH mytest as "
+								"(SELECT p2.postID, p2.title, p2.content, p2.upvotes, p2.downvotes "
+								"FROM posts p2 where p2.parentPost={0} "
+								"UNION ALL "
+								"SELECT p.postID, p.title, p.content, p.upvotes, p.downvotes "
+								"FROM posts p "
+								"INNER JOIN MyTest M on "
+								"M.postID=p.parentPost) "
+								"SELECT * from mytest ORDER BY (upvotes-downvotes) DESC".format(postID))
 	return dumps([dict(r) for r in query])
 
 """Votes on a post given the postiID and voteType"""
