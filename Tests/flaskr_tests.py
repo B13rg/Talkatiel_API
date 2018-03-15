@@ -5,9 +5,10 @@ import requests
 hostname = "127.0.0.1"
 port = 5002
 
-
-
 def runtests():
+	print("Current host: {0}".format(hostname))
+	print("Port: {0}\n".format(port))
+
 	print("TEST\t\tRESULT")
 	print("---------------------------")
 	result=test_pingServer()
@@ -94,9 +95,5 @@ def test_postUser():
 	except:
 		return "FAILED"
 	return "FAILED"
-
-
-
-
 
 runtests()
